@@ -57,3 +57,92 @@ jobs:
         path: build/libs/*.jar
         if-no-files-found: ignore
 
+    - name: 테스트 결과 요약 생성
+      if: always()
+      id: test-summary
+      run: |
+        echo "## 🔨 빌드 및 테스트 결과" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "build/test-results/test/TEST-*.xml" ]; then
+          # 테스트 결과 파싱
+          total=$(find build/test-results/test -name "*.xml" -exec grep -o 'tests="[0-9]*"' {} \; | sed 's/tests="//;s/"//' | awk '{s+=$1} END {print s}')
+          failures=$(find build/test-results/test -name "*.xml" -exec grep -o 'failures="[0-9]*"' {} \; | sed 's/failures="//;s/"//' | awk '{s+=$1} END {print s}')
+          errors=$(find build/test-results/test -name "*.xml" -exec grep -o 'errors="[0-9]*"' {} \; | sed 's/errors="//;s/"//' | awk '{s+=$1} END {print s}')
+          skipped=$(find build/test-results/test -name "*.xml" -exec grep -o 'skipped="[0-9]*"' {} \; | sed 's/skipped="//;s/"//' | awk '{s+=$1} END {print s}')
+          
+          passed=$((total - failures - errors - skipped))
+          
+          echo "TESTS_TOTAL=$total" >> $GITHUB_OUTPUT
+          echo "TESTS_PASSED=$passed" >> $GITHUB_OUTPUT
+          echo "TESTS_FAILED=$((failures + errors))" >> $GITHUB_OUTPUT
+          echo "TESTS_SKIPPED=$skipped" >> $GITHUB_OUTPUT
+          
+          echo "### ✅ 테스트 결과" >> $GITHUB_STEP_SUMMARY
+          echo "- 전체: $total" >> $GITHUB_STEP_SUMMARY
+          echo "- 성공: $passed" >> $GITHUB_STEP_SUMMARY
+          echo "- 실패: $((failures + errors))" >> $GITHUB_STEP_SUMMARY
+          echo "- 건너뜀: $skipped" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "TESTS_TOTAL=0" >> $GITHUB_OUTPUT
+          echo "TESTS_PASSED=0" >> $GITHUB_OUTPUT
+          echo "TESTS_FAILED=0" >> $GITHUB_OUTPUT
+          echo "TESTS_SKIPPED=0" >> $GITHUB_OUTPUT
+        fi
+        
+        # 빌드 결과 확인
+        if [ -f "build/libs/"*.jar ]; then
+          jar_files=$(ls -lh build/libs/*.jar | awk '{print $9" ("$5")"}')
+          echo "### 📦 빌드 아티팩트" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$jar_files" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: PR에 빌드 결과 코멘트 작성
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const buildStatus = '${{ job.status }}';
+          const testTotal = '${{ steps.test-summary.outputs.TESTS_TOTAL }}';
+          const testPassed = '${{ steps.test-summary.outputs.TESTS_PASSED }}';
+          const testFailed = '${{ steps.test-summary.outputs.TESTS_FAILED }}';
+          const testSkipped = '${{ steps.test-summary.outputs.TESTS_SKIPPED }}';
+          
+          const statusEmoji = buildStatus === 'success' ? '✅' : '❌';
+          const statusText = buildStatus === 'success' ? '성공' : '실패';
+          
+          let comment = `## ${statusEmoji} 빌드 ${statusText}\n\n`;
+          comment += `**커밋:** ${context.sha.substring(0, 7)}\n`;
+          comment += `**브랜치:** ${context.ref}\n`;
+          comment += `**실행 시간:** ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}\n\n`;
+          
+          if (testTotal > 0) {
+            const testPassRate = ((testPassed / testTotal) * 100).toFixed(1);
+            comment += `### 🧪 테스트 결과\n\n`;
+            comment += `| 항목 | 개수 |\n`;
+            comment += `|------|------|\n`;
+            comment += `| 전체 테스트 | ${testTotal} |\n`;
+            comment += `| ✅ 성공 | ${testPassed} |\n`;
+            comment += `| ❌ 실패 | ${testFailed} |\n`;
+            comment += `| ⏭️ 건너뜀 | ${testSkipped} |\n`;
+            comment += `| 📊 성공률 | ${testPassRate}% |\n\n`;
+          }
+          
+          comment += `### 📎 상세 정보\n\n`;
+          comment += `- [빌드 로그 확인](${context.payload.repository.html_url}/actions/runs/${context.runId})\n`;
+          comment += `- [테스트 결과 다운로드](${context.payload.repository.html_url}/actions/runs/${context.runId}#artifacts)\n`;
+          
+          if (buildStatus === 'success') {
+            comment += `\n✨ 빌드가 성공적으로 완료되었습니다!`;
+          } else {
+            comment += `\n⚠️ 빌드 중 문제가 발생했습니다. 로그를 확인해주세요.`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
