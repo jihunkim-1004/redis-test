@@ -362,6 +362,5 @@ docker-compose up -d
 - [Spring Data Redis 공식 문서](https://spring.io/projects/spring-data-redis)
 - [Redis 공식 문서](https://redis.io/docs/)
 - [Redis 명령어 참조](https://redis.io/commands/)
-
-- 
+- test
 
