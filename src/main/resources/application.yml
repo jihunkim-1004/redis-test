@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: redis-test
+  data:
+    redis:
+      # password: yourpassword  # 필요한 경우 비밀번호 설정
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+      
+      # Redis Cluster 모드를 사용하는 경우 아래 주석 해제
+      cluster:
+        nodes:
+          - 127.0.0.1:6379
+          - 127.0.0.1:6380
+          - 127.0.0.1:6381
+        max-redirects: 3
+
+server:
+  port: 8080
+
+# SpringDoc OpenAPI (Swagger) 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+logging:
+  level:
+    root: INFO
+    com.example.redistest: DEBUG
+

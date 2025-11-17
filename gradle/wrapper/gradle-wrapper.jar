@@ -1,0 +1,5 @@
+This is a placeholder for gradle-wrapper.jar. 
+In a real project, this would be a binary file.
+Please run './gradlew wrapper' to generate the actual wrapper jar file.
+
+
