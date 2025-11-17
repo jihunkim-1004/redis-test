@@ -31,10 +31,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Gradle 빌드 및 테스트
-      uses: gradle/gradle-build-action@v3
+    - name: Gradle 설치
+      uses: gradle/actions/setup-gradle@v3
       with:
-        arguments: build test --no-daemon
+        gradle-version: 8.5
+
+    - name: Gradle 빌드 및 테스트
+      run: gradle build test --no-daemon
 
     - name: 테스트 결과 업로드
       if: always()
