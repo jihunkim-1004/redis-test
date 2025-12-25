@@ -62,7 +62,8 @@ jobs:
           sleep 2
 
           echo "최신 jar 실행"
-          JAR_NAME=$(ls *.jar | head -n 1)
+          JAR_NAME=$(ls *.jar | grep -v plain | head -n 1)
+          echo "실행할 JAR: $JAR_NAME"
           nohup java -jar $JAR_NAME > ~/app/app.log 2>&1 &
 
           echo "배포 완료"
