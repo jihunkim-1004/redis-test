@@ -58,15 +58,39 @@ jobs:
           cd ~/app/build/libs || exit 1
 
           echo "========== 기존 앱 종료 =========="
-          # 더 구체적인 패턴으로 프로세스 찾기 (redis-test JAR만 종료)
-          if pgrep -f "redis-test.*\.jar" > /dev/null; then
-            echo "실행 중인 애플리케이션 발견, 종료 중..."
-            pkill -f "redis-test.*\.jar" && echo "종료 신호 전송 완료" || echo "종료 신호 전송 실패"
-            sleep 3
-            # 강제 종료가 필요한 경우
-            if pgrep -f "redis-test.*\.jar" > /dev/null; then
-              echo "프로세스가 여전히 실행 중, 강제 종료..."
-              pkill -9 -f "redis-test.*\.jar" || true
+          # 현재 사용자의 Java 프로세스만 찾기
+          OLD_PID=$(ps -u $(whoami) -f | grep "java.*redis-test.*\.jar" | grep -v grep | awk '{print $2}' | head -n 1)
+          
+          if [ -n "$OLD_PID" ] && [ "$OLD_PID" != "" ]; then
+            echo "실행 중인 애플리케이션 발견 (PID: $OLD_PID)"
+            echo "프로세스 정보:"
+            ps -p $OLD_PID -o pid,cmd 2>/dev/null || echo "프로세스 정보 조회 실패"
+            
+            echo "종료 신호 전송 중..."
+            if kill $OLD_PID 2>/dev/null; then
+              echo "종료 신호 전송 성공"
+            else
+              echo "종료 신호 전송 실패 (권한 문제일 수 있음)"
+            fi
+            
+            # 종료 대기 (최대 5초)
+            for i in 1 2 3 4 5; do
+              sleep 1
+              if ! ps -p $OLD_PID > /dev/null 2>&1; then
+                echo "✅ 애플리케이션 정상 종료됨"
+                break
+              fi
+              echo "종료 대기 중... ($i/5)"
+            done
+            
+            # 여전히 실행 중이면 강제 종료
+            if ps -p $OLD_PID > /dev/null 2>&1; then
+              echo "강제 종료 시도..."
+              if kill -9 $OLD_PID 2>/dev/null; then
+                echo "강제 종료 성공"
+              else
+                echo "⚠️ 강제 종료 실패"
+              fi
               sleep 1
             fi
           else
