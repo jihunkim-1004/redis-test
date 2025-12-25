@@ -58,17 +58,29 @@ jobs:
           cd ~/app/build/libs || exit 1
 
           echo "========== 기존 앱 종료 =========="
-          pkill -f 'java -jar' || echo "실행 중인 앱 없음"
-          sleep 2
-          echo "종료 완료"
+          # 더 구체적인 패턴으로 프로세스 찾기 (redis-test JAR만 종료)
+          if pgrep -f "redis-test.*\.jar" > /dev/null; then
+            echo "실행 중인 애플리케이션 발견, 종료 중..."
+            pkill -f "redis-test.*\.jar" && echo "종료 신호 전송 완료" || echo "종료 신호 전송 실패"
+            sleep 3
+            # 강제 종료가 필요한 경우
+            if pgrep -f "redis-test.*\.jar" > /dev/null; then
+              echo "프로세스가 여전히 실행 중, 강제 종료..."
+              pkill -9 -f "redis-test.*\.jar" || true
+              sleep 1
+            fi
+          else
+            echo "실행 중인 앱 없음"
+          fi
+          echo "종료 처리 완료"
 
           echo "========== 디렉토리 내용 확인 =========="
           ls -la
           
           echo "========== JAR 파일 선택 =========="
           # plain.jar가 아닌 실행 가능한 JAR 파일 찾기
-          if ls *-[0-9]*.jar 2>/dev/null | grep -v plain > /dev/null; then
-            JAR_NAME=$(ls *-[0-9]*.jar | grep -v plain | head -n 1)
+          if ls redis-test-*.jar 2>/dev/null | grep -v plain > /dev/null; then
+            JAR_NAME=$(ls redis-test-*.jar | grep -v plain | head -n 1)
           else
             JAR_NAME=$(ls *.jar 2>/dev/null | head -n 1)
           fi
@@ -82,16 +94,24 @@ jobs:
           
           echo "========== 애플리케이션 시작 =========="
           nohup java -jar "$JAR_NAME" > ~/app/app.log 2>&1 &
+          APP_PID=$!
+          echo "애플리케이션 시작됨 (백그라운드 PID: $APP_PID)"
           
-          sleep 2
+          sleep 3
           
           echo "========== 시작 확인 =========="
-          if pgrep -f "java -jar" > /dev/null; then
+          if pgrep -f "redis-test.*\.jar" > /dev/null; then
+            RUNNING_PID=$(pgrep -f "redis-test.*\.jar")
             echo "✅ 애플리케이션이 성공적으로 시작되었습니다!"
-            echo "프로세스 ID: $(pgrep -f 'java -jar')"
+            echo "프로세스 ID: $RUNNING_PID"
           else
             echo "⚠️ 애플리케이션 시작 실패 - 로그를 확인하세요"
-            tail -20 ~/app/app.log || echo "로그 파일 없음"
+            if [ -f ~/app/app.log ]; then
+              echo "--- 로그 마지막 20줄 ---"
+              tail -20 ~/app/app.log
+            else
+              echo "로그 파일 없음"
+            fi
             exit 1
           fi
 
