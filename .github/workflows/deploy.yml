@@ -20,19 +20,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Gradle 설치
+    # 2-1. Gradle Wrapper 실행 권한 부여
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # 2-2. Gradle 캐시 설정
+    - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: 8.5
 
-    - name: Gradle 빌드 및 테스트
-      run: gradle build test --no-daemon
+    # 3. 테스트 실행
+    - name: Run tests
+      run: ./gradlew test --no-daemon
 
-    # 3. 빌드
+    # 4. 빌드
     - name: Build
       run: ./gradlew clean build -x test
 
-    # 4. EC2에 JAR 복사
+    # 5. EC2에 JAR 복사
     - name: Copy jar to EC2
       uses: appleboy/scp-action@v0.1.4
       with:
@@ -42,7 +46,7 @@ jobs:
         source: "build/libs/*.jar"
         target: "/home/ec2-user/app"
 
-    # 5. EC2에서 애플리케이션 재시작
+    # 6. EC2에서 애플리케이션 재시작
     - name: Restart app on EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
