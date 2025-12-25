@@ -55,7 +55,7 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         script: |
           set -e
-          cd ~/app
+          cd ~/app/build/libs
 
           echo "기존 앱 종료"
           pkill -f 'java -jar' || true
@@ -63,6 +63,6 @@ jobs:
 
           echo "최신 jar 실행"
           JAR_NAME=$(ls *.jar | head -n 1)
-          nohup java -jar $JAR_NAME > app.log 2>&1 &
+          nohup java -jar $JAR_NAME > ~/app/app.log 2>&1 &
 
           echo "배포 완료"
