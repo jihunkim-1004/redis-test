@@ -300,6 +300,56 @@ src/main/java/com/example/redistest/
 - 로깅을 통한 디버깅 지원
 - JSON 직렬화/역직렬화 지원
 
+## 📊 코드 품질 및 커버리지
+
+이 프로젝트는 코드 품질 관리를 위해 **JaCoCo**와 **SonarQube**를 통합하고 있습니다.
+
+### JaCoCo 테스트 커버리지
+
+JaCoCo는 Java 코드 커버리지를 측정하는 도구입니다.
+
+```bash
+# 테스트 실행 및 커버리지 리포트 생성
+./gradlew test jacocoTestReport
+
+# 커버리지 리포트 확인
+open build/reports/jacoco/test/html/index.html
+```
+
+### SonarQube 코드 품질 분석
+
+SonarCloud를 통해 코드 품질을 지속적으로 모니터링합니다.
+
+#### 로컬에서 SonarQube 분석 실행
+
+```bash
+# SonarQube 분석 실행
+./gradlew sonar \
+  -Dsonar.projectKey=your-project-key \
+  -Dsonar.organization=your-organization \
+  -Dsonar.host.url=https://sonarcloud.io \
+  -Dsonar.token=your-sonar-token
+```
+
+#### SonarCloud 설정 방법
+
+상세한 설정 가이드는 [SONARCLOUD_SETUP.md](SONARCLOUD_SETUP.md)를 참고하세요.
+
+**간단 요약:**
+
+1. **SonarCloud 계정 생성**: [https://sonarcloud.io](https://sonarcloud.io)에서 GitHub 계정으로 로그인
+2. **조직 및 프로젝트 생성**: SonarCloud에서 새 조직 생성 후 프로젝트 import
+3. **토큰 생성**: SonarCloud → My Account → Security → Generate Tokens
+4. **GitHub Secrets 설정**: GitHub 저장소 → Settings → Secrets → `SONAR_TOKEN` 추가
+5. **build.gradle 수정**: `sonar.projectKey`와 `sonar.organization` 변경
+6. **자동 분석**: PR 생성 시 자동으로 SonarQube 분석 실행
+
+#### 커버리지 목표
+
+- 최소 라인 커버리지: 80% 이상 권장
+- CI/CD에서 커버리지 리포트 자동 생성
+- SonarCloud 대시보드에서 코드 품질 지표 확인
+
 ## 🔍 Redis CLI로 확인하기
 
 ```bash
@@ -362,6 +412,6 @@ docker-compose up -d
 - [Spring Data Redis 공식 문서](https://spring.io/projects/spring-data-redis)
 - [Redis 공식 문서](https://redis.io/docs/)
 - [Redis 명령어 참조](https://redis.io/commands/)
-
-- 
+- [SonarCloud 설정 가이드](SONARCLOUD_SETUP.md)
+- [문제 해결 가이드](TROUBLESHOOTING.md)
 
