@@ -32,6 +32,12 @@ dependencies {
     // Spring Boot Starter Data Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     
+    // Spring Boot Starter Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+    // MySQL Driver
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    
     // Lettuce (Redis Client) - Spring Boot에 포함되어 있음
     implementation 'io.lettuce:lettuce-core'
     

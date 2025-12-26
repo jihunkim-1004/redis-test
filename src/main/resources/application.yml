@@ -24,6 +24,23 @@ spring:
       #     - 127.0.0.1:6381
       #   max-redirects: 3
 
+  # JPA / Database 설정
+  jpa:
+    hibernate:
+      ddl-auto: update  # 테이블 자동 생성/업데이트
+    show-sql: true  # SQL 로그 출력
+    properties:
+      hibernate:
+        format_sql: true  # SQL 포맷팅
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  # MySQL 데이터베이스 연결
+  datasource:
+    url: jdbc:mysql://database-1.c34scacewdz6.ap-southeast-2.rds.amazonaws.com:3306/redistest?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: admin
+    password: amdin1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 server:
   port: 8080
 
