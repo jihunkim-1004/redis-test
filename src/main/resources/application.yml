@@ -5,8 +5,10 @@ spring:
     redis:
       host: test-valkey-p5jkkr.serverless.apse2.cache.amazonaws.com
       port: 6379
+      ssl:
+        enabled: true  # TLS/SSL 활성화
       # password: yourpassword  # 필요한 경우 비밀번호 설정
-      timeout: 2000ms
+      timeout: 10000ms  # 10초로 증가 (테스트용)
       lettuce:
         pool:
           max-active: 8
