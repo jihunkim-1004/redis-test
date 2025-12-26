@@ -21,7 +21,7 @@ spring:
         max-redirects: 3
 
 server:
-  port: 80
+  port: 8080
 
 # SpringDoc OpenAPI (Swagger) 설정
 springdoc:
