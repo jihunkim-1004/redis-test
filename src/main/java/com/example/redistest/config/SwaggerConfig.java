@@ -19,6 +19,10 @@ public class SwaggerConfig {
         localServer.setUrl("http://localhost:8080");
         localServer.setDescription("로컬 개발 서버");
 
+        Server prodServer = new Server();
+        prodServer.setUrl("/");
+        prodServer.setDescription("운영 서버");
+
         Contact contact = new Contact();
         contact.setName("Redis Test Team");
         contact.setEmail("contact@example.com");
@@ -36,7 +40,7 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(info)
-                .servers(List.of(localServer));
+                .servers(List.of(prodServer, localServer));
     }
 }
 
